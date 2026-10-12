@@ -8,7 +8,7 @@
 ## 目录
 
 > **仓库与路径约定（定稿）**
-> - GitHub 仓库：`https://github.com/Yrkxs/aigo-sage.git`（目录/项目名统一写 `algo-sage`）
+> - GitHub 仓库：`https://github.com/Yrkxs/algo-sage.git`（目录/项目名统一写 `algo-sage`）
 > - 本地脚手架根目录：`E:\Agnes_Hardness\algo-sage\`（独立子目录，自带 `.gitignore`，与外层 Agnes 主工程隔离，不继承外层 git）
 > - 本计划文件：`E:\Agnes_Hardness\algo-sage-plan.md`（脚手架外的唯一权威任务清单）
 
@@ -27,7 +27,7 @@
 - 前端：静态 HTML + 原生 JS + Chart.js（免构建，免费好部署）
 - 大模型：Agnes 官方 API（agnes-3.0-flash），OpenAI 兼容 HTTP 协议
 - 数据：Codeforces API + 洛谷/CSP 真题汇总（人工精选）
-- 版本控制：GitHub 公开仓库 `https://github.com/Yrkxs/aigo-sage.git`（本地目录名 `algo-sage`）
+- 版本控制：GitHub 公开仓库 `https://github.com/Yrkxs/algo-sage.git`（本地目录名 `algo-sage`）
 
 ### 0.4 三条硬依赖（必须最早解决）
 1. Agnes API 连通性（M1，Day1 第一件事）
