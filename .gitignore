@@ -1,0 +1,72 @@
+# algo-sage · .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# 环境变量与密钥（绝不入库）
+.env
+.env.local
+.env.*.local
+*.env
+config.local.py
+# 但 .env.example 是模板（不含真 key），需要入库
+!.env.example
+
+# 日志与运行证据（本地生成，不入库）
+evidence/logs/
+evidence/*.jsonl
+evidence/*.log
+*.log
+server/logs/
+
+# 数据集原始拉取（体积大，可再拉）
+dataset/cf_raw/
+dataset/*.raw
+dataset/**/*.raw
+
+# 缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 系统
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+ehthumbs.db
+.DS_Store

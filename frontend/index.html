@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>algo-sage · 主页</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <nav>
+    <a href="/">主页</a>
+    <a href="/result">结果</a>
+    <a href="/report">报告</a>
+  </nav>
+  <h1>algo-sage</h1>
+  <p>算法推荐与基准验证引擎 · 地基占位页（T-C1 实现）</p>
+  <form id="recommend-form">
+    <label>题面 / 数据特征</label>
+    <textarea id="problem-text" rows="6" placeholder="粘贴题面，或选择算法域 + 规模"></textarea>
+    <label>算法域</label>
+    <select id="domain">
+      <option value="auto">自动</option>
+      <option value="sorting">排序</option>
+      <option value="search">搜索</option>
+      <option value="dp">DP</option>
+      <option value="graph">图</option>
+    </select>
+    <label>规模 n</label>
+    <input id="n" type="number" value="100000" />
+    <button type="submit">开始推荐</button>
+  </form>
+  <script src="/static/app.js"></script>
+</body>
+</html>
