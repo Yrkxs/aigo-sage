@@ -127,7 +127,8 @@ class AgnesClient:
 **① 题面解析 SYSTEM**
 ```
 你是算法题面解析器。读题面，判断算法域与规模约束。只返回 JSON：
-{"domain":"sorting|search|dp|graph","n":<int>,"constraints":[str],"key_features":str}
+{"domain":"sorting|search|dp|graph|nt","n":<int>,"constraints":[str],"key_features":str}
+说明：nt=number theory（数论）。
 ```
 
 **② 推荐+调参 SYSTEM**
@@ -151,12 +152,14 @@ class AgnesClient:
 {"error_type":str,"root_cause":str,"fix":str}
 ```
 
-## 3. 算法库 v1（20 个）
+## 3. 算法库 v2（6 类 60 个 + 5 大类扩展）
 
 每个算法在 `algorithms/<category>.py` 中定义，并在 `algorithms/registry.py` 注册。
 注册项必须含：`name, category, impl(callable), params(dict 默认值), complexity, applicable(str), template_code(str)`。
 
-### 3.1 排序（5）
+**说明**：v1 仅覆盖排序/搜索/DP/图 4 域 20 个。v2 把主流、常用的算法全部纳入，共 9 域 60 个。新增 5 域（数据结构/字符串/计算几何/网络流/贪心博弈）在 T-A2 实现时统一补齐；若时间不够，按 §12 扩展流程先保留接口、后填充实现（`register()` 支持任意新增 category，`ALGO_LIBRARY_SUMMARY` 自动聚合，无需改 ② 段 prompt 枚举以外的内容）。
+
+### 3.1 排序（6）
 | 算法 | 默认参数 | 复杂度 | 适用特征 |
 |---|---|---|---|
 | 冒泡 | `{}` | O(n²) | n≤2000，教学 |
@@ -164,8 +167,9 @@ class AgnesClient:
 | 归并 | `merge_depth=0` | O(n log n) 稳 | 需稳定排序 |
 | 堆排 | `{}` | O(n log n) | 内存受限 |
 | 计数/桶 | `k=100` | O(n+k) | 值域小 |
+| 基数/LSRadix | `digits=10` | O(n·d) | 整数、值域极大 |
 
-### 3.2 搜索（5）
+### 3.2 搜索（6）
 | 算法 | 默认参数 | 复杂度 | 适用特征 |
 |---|---|---|---|
 | 二分 | `{}` | O(log n) | 有序 |
@@ -173,17 +177,21 @@ class AgnesClient:
 | DFS | `{}` | O(V+E) | 连通性/拓扑 |
 | Dijkstra | `impl=heap` | O((V+E)logV) | 非负权 |
 | A* | `heuristic=euclid, h_scale=1.0` | 依赖 h | 启发搜索 |
+| Bellman-Ford/SPFA | `{}` | O(VE)/摊还 O(E) | 负权 |
 
-### 3.3 DP（5）
+### 3.3 DP（8）
 | 算法 | 默认参数 | 复杂度 | 适用特征 |
 |---|---|---|---|
 | 01 背包 | `optim=rolling` | O(n·C) | 容量 C 不大 |
+| 完全背包 | `optim=rolling` | O(n·C) | 每件无限 |
 | LIS | `variant=nlogn` | O(n log n) | 最长递增 |
 | LCS | `{}` | O(nm) | 两序列 |
 | 区间 DP | `{}` | O(n³) | 区间转移 |
+| 树形 DP | `root=0` | O(V·k) | 树上决策 |
 | 状压 DP | `state=1<<m` | O(2^m·n) | m≤20 |
+| 数位 DP | `len≤18` | O(len·10·state) | 数数问题 |
 
-### 3.4 图（5）
+### 3.4 图（7）
 | 算法 | 默认参数 | 复杂度 | 适用特征 |
 |---|---|---|---|
 | Kruskal | `union_path_compress=true` | O(E log E) | MST 稀疏 |
@@ -191,19 +199,80 @@ class AgnesClient:
 | Floyd | `{}` | O(V³) | 全源 V≤500 |
 | Topo | `{}` | O(V+E) | DAG 排序 |
 | Tarjan(SCC) | `{}` | O(V+E) | 强连通 |
+| 最长路(有向环) | `{}` | O(V+E) | 负环检测 |
+| 二分图匹配(匈牙利) | `{}` | O(VE) | 二部图匹配 |
 
-### 3.5 参数调优实验矩阵（benchmark 用）
+### 3.5 数论（6）
+| 算法 | 默认参数 | 复杂度 | 适用特征 |
+|---|---|---|---|
+| 快速幂 | `mod` | O(log n) | a^b mod p |
+| 扩展欧几里得 / 逆元 | `{}` | O(log b) | 线性同余、逆元 |
+| 筛法（埃氏/线性） | `limit=1e6, linear=true` | O(n) 线性 / O(n log log n) 埃氏 | 素数表、最小质因子 |
+| 矩阵快速幂 / 斐波那契 | `{}` | O(log n) | 递推式 n×n |
+| 数论分块 / 莫比乌斯 | `method=block` | O(√n) | 求和、卷积 |
+| NTT/FFT 多项式 | `{}` | O(n log n) | 多项式乘法/卷积 |
+
+### 3.6 数据结构（7）
+| 算法 | 默认参数 | 复杂度 | 适用特征 |
+|---|---|---|---|
+| 线段树 | `lazy=propagate` | O(log n) | 区间查询/修改 |
+| Fenwick(BIT) | `{}` | O(log n) | 前缀和/单点更新 |
+| 主席树 | `persistent=true` | O(n log n) 建 + O(log n) 查 | 版本历史区间 k 大 |
+| LCA(倍增/主席树) | `up_table=True` | O(n log n) 预处理 + O(log n) 查 | 树上 LCA |
+| Treap | `split/merge` | 期望 O(log n) | 平衡有序集 |
+| 单调栈 | `strict=false` | O(n) | 最近更小/更大元素 |
+| RMQ(SparseTable) | `{}` | O(1) 查 / O(n log n) 建 | 静态区间最值 |
+
+### 3.7 字符串（6）
+| 算法 | 默认参数 | 复杂度 | 适用特征 |
+|---|---|---|---|
+| KMP | `prefix_function` | O(n+m) | 模式匹配 |
+| Z-Function | `{}` | O(n+m) | 前缀串匹配 |
+| 前缀哈希(双模) | `mod1=1e9+7, mod2=1e9+9, base=131` | O(n) 建 + O(1) 比 | 子串判等 |
+| Manacher | `{}` | O(n) | 回文半径 |
+| Aho-Corasick | `max_pat=1e5` | O(n·1 + m·1) 总 | 多模式串匹配 |
+| 后缀数组+LCP | `{}` | O(n log n) / O(n) | 后缀比较/LCP |
+
+### 3.8 计算几何（5）
+| 算法 | 默认参数 | 复杂度 | 适用特征 |
+|---|---|---|---|
+| 凸包(Andrew) | `keep_collinear=false` | O(n log n) | 凸包 |
+| 旋转卡壳 | `{}` | O(n) | 凸包直径/最大间距 |
+| 半平面交 | `half_plane=True` | O(n log n) | 可行域判定 |
+| 最近点对 | `divide_conquer=true` | O(n log n) | 最近点对距离 |
+| 点到线段/圆距离 | `{}` | O(1) | 基础距离判定 |
+
+### 3.9 网络流（4）
+| 算法 | 默认参数 | 复杂度 | 适用特征 |
+|---|---|---|---|
+| Dinic | `blocking_flow=true` | O(E·V²) 最坏 / O(E·√V) 单位 | 一般最大流 |
+| ISAP | `{}` | O(V²E) | 小规模稠密流 |
+| 费用流(SPFA) | `cost=True` | O(V·E·flow) | 最小费用最大流 |
+| 最大流→最小割 | `{}` | 同 Dinic | 图割/二分图独立集 |
+
+### 3.10 贪心与博弈（4）
+| 算法 | 默认参数 | 复杂度 | 适用特征 |
+|---|---|---|---|
+| 区间贪心(活动选择) | `{}` | O(n log n) | 不重叠区间最多 |
+| 交换论证/优先级贪心 | `{}` | O(n log n) | 最小化加权完成时间 |
+| SG/Sprague-Grundy | `memo=True` | O(状态数) | 组合博弈 |
+| 区间博弈 DP | `{}` | O(n³) | 取数/石子博弈 |
+
+### 3.11 参数调优实验矩阵（benchmark 用）
 每个算法选 2-3 个关键参数，生成「默认 vs 调优」两列对比，证明「调参环节价值」。
+
+> **v1 vs v2**：v1 提交时只用前 4 类（20 个）跑 40 题准确率（指标稳定、时间可控）。v2 的 9 域 60 个作为「可扩展库」随代码入库，后续按 §12 流程逐域填充实现与样例，不阻塞提交。
 
 ## 4. 数据集与标注规范（40 题，方案 Z）
 
 ### 4.1 数据来源
 - 主源：Codeforces API（带 tags，自动拉取）
-  - tags：`sorting`、`binary-search`、`graphs`、`dp`、`shortest-path`、`graphs`、`dfs-and-similar`、`data-structures`
+  - v1 tags（前 4 域 40 题）：`sorting`、`binary-search`、`graphs`、`dp`、`shortest-path`、`dfs-and-similar`、`data-structures`
+  - v2 预留 tags（5 新域）：`math`（数论/NTT）、`strings`、`geometry`、`flows`、`greedy`
   - 难度过滤：`rating` 1600-2600（保证有明确最优算法）
 - 辅源：洛谷 / CSP / ICPC 真题汇总站，人工精选 10-15 道经典题
 
-### 4.2 目标分布（40 题）
+### 4.2 目标分布（v1 40 题）
 | 算法域 | 题数 | 代表题 |
 |---|---|---|
 | 排序 | 8 | CF 常见 + 手工 |
@@ -211,6 +280,10 @@ class AgnesClient:
 | DP | 10 | 背包/LIS/区间 |
 | 图 | 8 | MST/拓扑/SCC |
 | 综合 | 6 | 多算法组合 |
+
+> **v1 提交只用前 4 域（20 算法）跑 40 题准确率，指标稳定、时间可控。**
+> v2 的 5 新域（数论/数据结构/字符串/计算几何/网络流/贪心博弈）作为「可扩展库」随代码入库，不纳入 v1 提交指标。后续按 §12 流程逐域补实现 + 样例 + 准确率集。
+
 
 ### 4.3 识别优先级（自动→人工）
 1. CF tags 直接映射（自动，最高优先）
@@ -418,5 +491,34 @@ class AgnesClient:
 阻塞：[无 / 描述 + 需要的支持]
 ```
 
-（风险/提交/站会模板已并入 §8-§11）
+## 12. 扩展算法域标准流程（SOP）
+
+> 目标：加一个新域（如「数论」「字符串」「计算几何」「网络流」「贪心博弈」）时，**改动点收敛到 5 处、按序执行**，避免散乱、漏改。
+
+### 12.1 5 个改动点（按序）
+
+| # | 文件 | 动作 | 验收 |
+|---|---|---|---|
+| 1 | `algorithms/<cat>.py`（新建或追加） | 实现该域算法的 `impl + 默认参数 + 复杂度 + 适用特征 + template_code`，逐条 `register()` | `from algorithms.registry import all_algorithms; print(len(all_algorithms()))` 数字增加正确 |
+| 2 | `server/prompts.py` | ① 段 `domain` 枚举加该域代号（如 `nt`）；`ALGO_LIBRARY_SUMMARY` 自动聚合，无需手改 | ① 段 Agnes 能正确解析出该域代号 |
+| 3 | `benchmark/datasets.py` | 该域的「正常/边界/失败」3 类样例数据生成 | 该域任取 1 算法 × 3 类数据能跑计时表 |
+| 4 | `scripts/fetch_cf.py` + `scripts/classify.py` | CF tag 映射表加该域；`classify.py` 关键词表加该域映射（如"素数/取模"→`nt`） | 拉到的该域题自动给出 confidence，低置信 ≤ 15 行进人工 |
+| 5 | `frontend/index.html` + `report.html` | 主页算法域卡片加该域；报告页准确率仪表盘加该域分组 | 浏览器可见新域卡片与分组 |
+
+### 12.2 关键不变量（保证加域不改核心）
+- `registry.py` 的 `_REGISTRY` 是 dict-of-lists，`register()` 用 `setdefault`，**任意新 category 自动可用**，无需改注册表结构
+- ② 段推荐 prompt 注入的 `ALGO_LIBRARY_SUMMARY` 是**遍历 `all_algorithms()` 生成**，加域后摘要自动变长，**推荐逻辑零改动**
+- 调用链 8 步、日志 JSONL、任务 ID、准确率统计全部按「算法名」聚合，不绑定具体域 → 加域后自动覆盖新域
+
+### 12.3 验收（新域就绪）
+- [ ] `all_algorithms()` 总数正确
+- [ ] 该域 3 类样例 benchmark 跑通
+- [ ] 该域 1 道题走通全链路（推荐→代码→计时→日志 4 段齐全）
+- [ ] 前端卡片与报告分组可见
+- [ ] 不破坏既有 4 域的准确率（回归：v1 40 题跑一遍，准确率不降）
+
+### 12.4 提交/非提交策略
+- **v1 提交**：仅前 4 域（20 算法）进准确率集，指标稳定
+- **v2 扩展域**：数论等 5 新域随代码入库，逐域按 §12 填充实现；**不阻塞 v1 提交**，作为「可扩展性」卖点写进 README 与博客
+
 （风险/提交/站会模板已并入 §8-§11）
